@@ -1,0 +1,9 @@
+name: ReydelaColinaHEXA
+version: '${project.version}'
+main: org.hexa.reydelacolinahexa.ReydelaColinaHEXA
+api-version: '1.20'
+authors: [ImRadiGamer]
+commands:
+  koth:
+    description: King of the Hill commands
+    usage: /koth <setzone|start|stop>
