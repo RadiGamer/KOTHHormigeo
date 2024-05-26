@@ -1,11 +1,13 @@
 package org.hexa.reydelacolinahexa.Commands;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.hexa.reydelacolinahexa.Listeners.KothListener;
 import org.hexa.reydelacolinahexa.ReydelaColinaHEXA;
 
@@ -25,18 +27,18 @@ public class KOTHCommand implements CommandExecutor {
 
         Player player = (Player) sender;
         if (args.length < 1) {
-            player.sendMessage(ChatColor.YELLOW + "Uso: /koth <setzone|start|stop>");
+            player.sendMessage(ChatColor.YELLOW + "Uso: /koth <setcorner|setcenter|start|stop>");
             return true;
         }
 
         String subCommand = args[0];
         switch (subCommand.toLowerCase()) {
-            case "setzone":
+            case "setcorner":
                 if (args.length < 4 && args[1].equals("2")) {
-                    player.sendMessage(ChatColor.YELLOW + "Uso: /koth setzone 2 <corner1|corner2> <identifier>");
+                    player.sendMessage(ChatColor.YELLOW + "Uso: /koth setcorner 2 <corner1|corner2> <identifier>");
                     return true;
                 } else if (args.length < 3) {
-                    player.sendMessage(ChatColor.YELLOW + "Uso: /koth setzone <round> <corner1|corner2>");
+                    player.sendMessage(ChatColor.YELLOW + "Uso: /koth setcorner <round> <corner1|corner2>");
                     return true;
                 }
 
@@ -53,10 +55,37 @@ public class KOTHCommand implements CommandExecutor {
                 }
 
                 plugin.getConfig().set(path + ".X", loc.getBlockX());
+                plugin.getConfig().set(path + ".Y", loc.getBlockY());
                 plugin.getConfig().set(path + ".Z", loc.getBlockZ());
                 plugin.saveConfig();
 
-                player.sendMessage(ChatColor.GREEN + "Zona " + corner + " establecida para la Ronda " + round + " en " + loc.getBlockX() + ", " + loc.getBlockZ());
+                player.sendMessage(ChatColor.GREEN + "Esquina " + corner + " establecida para la Ronda " + round + " en " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+                break;
+
+            case "setcenter":
+                if (args.length < 3 && args[1].equals("2")) {
+                    player.sendMessage(ChatColor.YELLOW + "Uso: /koth setcenter 2 <identifier>");
+                    return true;
+                } else if (args.length < 2) {
+                    player.sendMessage(ChatColor.YELLOW + "Uso: /koth setcenter <round>");
+                    return true;
+                }
+
+                round = args[1];
+                loc = player.getLocation();
+                if (round.equals("2")) {
+                    String identifier = args[2];
+                    path = "Round" + round + "." + identifier + ".Center";
+                } else {
+                    path = "Round" + round + ".1.Center";
+                }
+
+                plugin.getConfig().set(path + ".X", loc.getBlockX());
+                plugin.getConfig().set(path + ".Y", loc.getBlockY());
+                plugin.getConfig().set(path + ".Z", loc.getBlockZ());
+                plugin.saveConfig();
+
+                player.sendMessage(ChatColor.GREEN + "Centro establecido para la Ronda " + round + " en " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
                 break;
 
             case "start":
@@ -74,8 +103,25 @@ public class KOTHCommand implements CommandExecutor {
                 }
 
                 KothListener kothListener = plugin.getKothListener();
-                kothListener.startRound(roundToStart);
-                player.sendMessage(ChatColor.GREEN + "¡Ronda " + roundToStart + " de KOTH iniciada!");
+
+                if (roundToStart == 3) {
+                    if (args.length < 3) {
+                        player.sendMessage(ChatColor.YELLOW + "Uso: /koth start 3 <Radius>");
+                        return true;
+                    }
+                    int radius;
+                    try {
+                        radius = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException e) {
+                        player.sendMessage(ChatColor.RED + "Radio inválido.");
+                        return true;
+                    }
+                    kothListener.startRound3(player, radius);
+                    player.sendMessage(ChatColor.GREEN + "¡Ronda 3 de KOTH iniciada con radio " + radius + "!");
+                } else {
+                    kothListener.startRound(roundToStart);
+                    player.sendMessage(ChatColor.GREEN + "¡Ronda " + roundToStart + " de KOTH iniciada!");
+                }
                 break;
 
             case "stop":
@@ -85,7 +131,7 @@ public class KOTHCommand implements CommandExecutor {
                 break;
 
             default:
-                player.sendMessage(ChatColor.YELLOW + "Subcomando desconocido. Uso: /koth <setzone|start|stop>");
+                player.sendMessage(ChatColor.YELLOW + "Subcomando desconocido. Uso: /koth <setcorner|setcenter|start|stop>");
                 break;
         }
 
